@@ -5,23 +5,36 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+static void do_read_from_stdin();
 static void do_cat(const char *path);
 static void die(const char *s);
+
+#define BUFFER_SIZE 2048
 
 int main(int argc, char *argv[])
 {
   int i;
-  if(argc < 2) {
-    fprintf(stderr, "%s: file name not given\n", argv[0]);
-    exit(1);
-  }
 
-  for (i=1; i<argc; i++) {
-    do_cat(argv[i]);
+  if (argc == 1) {
+    do_read_from_stdin();
+  } else {
+    for (i=1; i<argc; i++) {
+      do_cat(argv[i]);
+    }
   }
 }
 
-#define BUFFER_SIZE 2048
+static void do_read_from_stdin()
+{
+  unsigned char buf[BUFFER_SIZE];
+  int n;
+  for (;;) {
+    n = read(STDIN_FILENO, buf, sizeof buf);
+    if (n < 0) exit(1);
+    if (n == 0) break;
+    if (write(STDOUT_FILENO, buf, n) < 0) exit(1);
+  }
+}
 
 static void do_cat(const char *path)
 {
